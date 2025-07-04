@@ -19,7 +19,19 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(child: Text('Logged in as: \\${user?.email ?? "Unknown"}')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Logged in as: \\${user?.email ?? "Unknown"}'),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pushNamed('/profile'),
+              child: const Text('View Profile'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

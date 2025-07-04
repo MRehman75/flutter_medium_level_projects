@@ -47,6 +47,7 @@ class _RegisterPageState extends State<RegisterPage> {
       await _firestore.collection('users').doc(userCredential.user!.uid).set({
         'username': username,
         'email': _emailController.text.trim(),
+        'groups': [],
       });
       await userCredential.user!.sendEmailVerification();
       await _auth.signOut();
