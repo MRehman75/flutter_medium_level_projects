@@ -155,12 +155,211 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         const SizedBox(height: 16),
                         Center(
-                          child: Text(
-                            username,
-                            style: GoogleFonts.montserrat(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 22,
-                            ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                username,
+                                style: GoogleFonts.montserrat(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 22,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.edit,
+                                  color: Color(0xFF4059F1),
+                                ),
+                                tooltip: 'Edit Profile',
+                                onPressed: () async {
+                                  final usernameController =
+                                      TextEditingController(text: username);
+                                  final emailController = TextEditingController(
+                                    text: email,
+                                  );
+                                  String dialogError = '';
+                                  bool saving = false;
+                                  await showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return StatefulBuilder(
+                                        builder: (context, setState) {
+                                          return AlertDialog(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                            ),
+                                            title: Text(
+                                              'Edit Profile',
+                                              style: GoogleFonts.montserrat(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                TextField(
+                                                  controller:
+                                                      usernameController,
+                                                  decoration: InputDecoration(
+                                                    labelText: 'Username',
+                                                    labelStyle:
+                                                        GoogleFonts.openSans(),
+                                                    border: OutlineInputBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 12),
+                                                TextField(
+                                                  controller: emailController,
+                                                  decoration: InputDecoration(
+                                                    labelText: 'Email',
+                                                    labelStyle:
+                                                        GoogleFonts.openSans(),
+                                                    border: OutlineInputBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            12,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                if (dialogError.isNotEmpty)
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                          top: 8.0,
+                                                        ),
+                                                    child: Text(
+                                                      dialogError,
+                                                      style:
+                                                          GoogleFonts.openSans(
+                                                            color: Colors.red,
+                                                          ),
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed:
+                                                    () =>
+                                                        Navigator.of(
+                                                          context,
+                                                        ).pop(),
+                                                child: Text(
+                                                  'Cancel',
+                                                  style: GoogleFonts.openSans(),
+                                                ),
+                                              ),
+                                              saving
+                                                  ? const Padding(
+                                                    padding:
+                                                        EdgeInsets.symmetric(
+                                                          horizontal: 16.0,
+                                                        ),
+                                                    child: SizedBox(
+                                                      width: 20,
+                                                      height: 20,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                            strokeWidth: 2,
+                                                          ),
+                                                    ),
+                                                  )
+                                                  : ElevatedButton(
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor:
+                                                          const Color(
+                                                            0xFF4059F1,
+                                                          ),
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              30,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                    onPressed: () async {
+                                                      setState(() {
+                                                        dialogError = '';
+                                                        saving = true;
+                                                      });
+                                                      try {
+                                                        // Update Firestore
+                                                        await FirebaseFirestore
+                                                            .instance
+                                                            .collection('users')
+                                                            .doc(user.uid)
+                                                            .update({
+                                                              'username':
+                                                                  usernameController
+                                                                      .text
+                                                                      .trim(),
+                                                              'email':
+                                                                  emailController
+                                                                      .text
+                                                                      .trim(),
+                                                            });
+                                                        // Update FirebaseAuth email if changed
+                                                        if (email !=
+                                                            emailController.text
+                                                                .trim()) {
+                                                          await user
+                                                              .updateEmail(
+                                                                emailController
+                                                                    .text
+                                                                    .trim(),
+                                                              );
+                                                        }
+                                                        setState(() {
+                                                          saving = false;
+                                                        });
+                                                        Navigator.of(
+                                                          context,
+                                                        ).pop();
+                                                        setState(
+                                                          () {},
+                                                        ); // Refresh UI
+                                                      } on FirebaseAuthException catch (
+                                                        e
+                                                      ) {
+                                                        setState(() {
+                                                          dialogError =
+                                                              e.message ??
+                                                              'Failed to update profile.';
+                                                          saving = false;
+                                                        });
+                                                      } catch (e) {
+                                                        setState(() {
+                                                          dialogError =
+                                                              'Failed to update profile.';
+                                                          saving = false;
+                                                        });
+                                                      }
+                                                    },
+                                                    child: Text(
+                                                      'Save',
+                                                      style:
+                                                          GoogleFonts.montserrat(
+                                                            color: Colors.white,
+                                                          ),
+                                                    ),
+                                                  ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            ],
                           ),
                         ),
                         Center(
