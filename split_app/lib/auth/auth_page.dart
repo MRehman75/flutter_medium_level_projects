@@ -12,6 +12,7 @@ class AuthPage extends StatefulWidget {
 
 class _AuthPageState extends State<AuthPage> {
   bool showLogin = true;
+  bool navigatedToHome = false;
 
   void toggle() => setState(() => showLogin = !showLogin);
 
@@ -25,9 +26,17 @@ class _AuthPageState extends State<AuthPage> {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        if (snapshot.hasData) {
-          return const HomePage();
+        if (snapshot.hasData && snapshot.data!.emailVerified) {
+          // Navigate to home if not already there
+          if (!navigatedToHome) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.of(context).pushReplacementNamed('/home');
+            });
+            navigatedToHome = true;
+          }
+          return const SizedBox.shrink();
         }
+        navigatedToHome = false;
         return showLogin
             ? LoginPage(onRegisterClicked: toggle)
             : RegisterPage(onLoginClicked: toggle);

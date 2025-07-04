@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'auth/auth_page.dart';
 import 'auth/login_page.dart';
 import 'auth/register_page.dart';
+import 'auth/home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
               onLoginClicked:
                   () => Navigator.of(context).pushReplacementNamed('/login'),
             ),
+        '/home': (context) => const HomePage(),
       },
     );
   }

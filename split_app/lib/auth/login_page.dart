@@ -38,6 +38,10 @@ class _LoginPageState extends State<LoginPage> {
         });
         return;
       }
+      setState(() {
+        loading = false;
+      });
+      Navigator.of(context).pushReplacementNamed('/home');
     } on FirebaseAuthException catch (e) {
       setState(() {
         error = e.message ?? 'Login failed';
@@ -45,9 +49,6 @@ class _LoginPageState extends State<LoginPage> {
       });
       return;
     }
-    setState(() {
-      loading = false;
-    });
   }
 
   Future<void> resendVerificationEmail() async {
@@ -72,6 +73,7 @@ class _LoginPageState extends State<LoginPage> {
           showVerifyMessage = false;
           error = '';
         });
+        Navigator.of(context).pushReplacementNamed('/home');
       } else {
         setState(() {
           error = 'Email not verified yet. Please check your inbox.';
