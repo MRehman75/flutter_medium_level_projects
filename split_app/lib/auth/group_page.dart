@@ -391,35 +391,6 @@ class _GroupPageState extends State<GroupPage> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Center(
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4059F1),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 14,
-                          horizontal: 32,
-                        ),
-                        elevation: 3,
-                      ),
-                      icon: const Icon(Icons.person_add, color: Colors.white),
-                      label: Text(
-                        'Invite User',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 16,
-                          color: Colors.white,
-                        ),
-                      ),
-                      onPressed:
-                          () => Navigator.of(context).pushNamed(
-                            '/invite_user',
-                            arguments: widget.groupId,
-                          ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
                   Text(
                     'Expense History',
                     style: GoogleFonts.montserrat(
@@ -518,34 +489,57 @@ class _GroupPageState extends State<GroupPage> {
           );
         },
       ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            backgroundColor: const Color(0xFF4059F1),
-            onPressed: () {
-              Navigator.of(
-                context,
-              ).pushNamed('/add_expense', arguments: widget.groupId);
-            },
-            child: const Icon(Icons.add, color: Colors.white),
-            tooltip: 'Add Expense',
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        color: Colors.white,
+        elevation: 8,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.add_circle,
+                  color: Color(0xFF4059F1),
+                  size: 32,
+                ),
+                tooltip: 'Add Expense',
+                onPressed: () {
+                  Navigator.of(
+                    context,
+                  ).pushNamed('/add_expense', arguments: widget.groupId);
+                },
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.dashboard,
+                  color: Color(0xFF6D0EB5),
+                  size: 32,
+                ),
+                tooltip: 'Dashboard',
+                onPressed: () {
+                  Navigator.of(
+                    context,
+                  ).pushNamed('/group_dashboard', arguments: widget.groupId);
+                },
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.person_add,
+                  color: Color(0xFF4059F1),
+                  size: 32,
+                ),
+                tooltip: 'Invite User',
+                onPressed: () {
+                  Navigator.of(
+                    context,
+                  ).pushNamed('/invite_user', arguments: widget.groupId);
+                },
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          FloatingActionButton(
-            heroTag: 'dashboard',
-            mini: true,
-            backgroundColor: const Color(0xFF6D0EB5),
-            onPressed: () {
-              Navigator.of(
-                context,
-              ).pushNamed('/group_dashboard', arguments: widget.groupId);
-            },
-            child: const Icon(Icons.dashboard, color: Colors.white),
-            tooltip: 'Group Dashboard',
-          ),
-        ],
+        ),
       ),
     );
   }
