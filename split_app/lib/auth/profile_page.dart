@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -77,7 +78,26 @@ class _ProfilePageState extends State<ProfilePage> {
         .doc(user.uid);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(
+        title: Text(
+          'Profile',
+          style: GoogleFonts.montserrat(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6D0EB5), Color(0xFF4059F1)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+      ),
       body: FutureBuilder<DocumentSnapshot>(
         future: userDoc.get(),
         builder: (context, snapshot) {
@@ -88,146 +108,298 @@ class _ProfilePageState extends State<ProfilePage> {
           final email = data['email'] ?? '';
           final groups = List<String>.from(data['groups'] ?? []);
           final cash = (data['cash'] ?? 0.0) as num;
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Username: $username',
-                  style: const TextStyle(fontSize: 18),
-                ),
-                const SizedBox(height: 8),
-                Text('Email: $email', style: const TextStyle(fontSize: 18)),
-                const SizedBox(height: 16),
-                Text(
-                  'Cash Balance: Rs. ${cash.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 18),
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _cashController,
-                        decoration: const InputDecoration(
-                          labelText: 'Add Cash (Rs.)',
+          return SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: CircleAvatar(
+                      radius: 40,
+                      backgroundColor: const Color(0xFF6D0EB5),
+                      child: Text(
+                        username.isNotEmpty ? username[0].toUpperCase() : '?',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 36,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
-                        keyboardType: TextInputType.number,
                       ),
                     ),
-                    ElevatedButton(
-                      onPressed:
-                          loading
-                              ? null
-                              : () {
-                                final amount = double.tryParse(
-                                  _cashController.text.trim(),
-                                );
-                                if (amount != null && amount > 0) {
-                                  addCash(user.uid, amount);
-                                }
-                              },
-                      child:
-                          loading
-                              ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                              : const Text('Add'),
-                    ),
-                  ],
-                ),
-                if (error.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
+                  ),
+                  const SizedBox(height: 16),
+                  Center(
                     child: Text(
-                      error,
-                      style: const TextStyle(color: Colors.red),
+                      username,
+                      style: GoogleFonts.montserrat(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
+                      ),
                     ),
                   ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Groups:',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                ...groups.isEmpty
-                    ? [const Text('No groups yet.')]
-                    : groups.map((g) => Text(g)).toList(),
-                const SizedBox(height: 16),
-                // Pending Invites
-                const Text(
-                  'Pending Group Invites:',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                StreamBuilder<QuerySnapshot>(
-                  stream:
-                      FirebaseFirestore.instance
-                          .collection('users')
-                          .doc(user.uid)
-                          .collection('pendingInvites')
-                          .orderBy('timestamp', descending: true)
-                          .snapshots(),
-                  builder: (context, snap) {
-                    if (!snap.hasData) return const CircularProgressIndicator();
-                    final docs = snap.data!.docs;
-                    if (docs.isEmpty) return const Text('No pending invites.');
-                    return Column(
-                      children:
-                          docs.map((doc) {
-                            final data = doc.data() as Map<String, dynamic>;
-                            final groupName = data['groupName'] ?? '';
-                            final groupId = data['groupId'] ?? '';
-                            return Card(
-                              margin: const EdgeInsets.symmetric(vertical: 4),
-                              child: ListTile(
-                                title: Text('Group: $groupName'),
-                                subtitle: Text('Invited to join'),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.check,
-                                        color: Colors.green,
-                                      ),
-                                      onPressed:
-                                          () => acceptInvite(
-                                            doc.id,
-                                            groupId,
-                                            groupName,
-                                          ),
-                                      tooltip: 'Accept',
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.close,
-                                        color: Colors.red,
-                                      ),
-                                      onPressed: () => rejectInvite(doc.id),
-                                      tooltip: 'Reject',
-                                    ),
-                                  ],
+                  Center(
+                    child: Text(
+                      email,
+                      style: GoogleFonts.openSans(
+                        fontSize: 16,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 3,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Cash Balance',
+                            style: GoogleFonts.montserrat(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Rs. ${cash.toStringAsFixed(2)}',
+                            style: GoogleFonts.openSans(fontSize: 18),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _cashController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Add Cash (Rs.)',
+                                  ),
+                                  keyboardType: TextInputType.number,
                                 ),
                               ),
-                            );
-                          }).toList(),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () async {
-                    await FirebaseAuth.instance.signOut();
-                    Navigator.of(
-                      context,
-                    ).pushNamedAndRemoveUntil('/login', (route) => false);
-                  },
-                  child: const Text('Logout'),
-                ),
-              ],
+                              const SizedBox(width: 12),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF4059F1),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                    horizontal: 20,
+                                  ),
+                                ),
+                                onPressed:
+                                    loading
+                                        ? null
+                                        : () {
+                                          final amount = double.tryParse(
+                                            _cashController.text.trim(),
+                                          );
+                                          if (amount != null && amount > 0) {
+                                            addCash(user.uid, amount);
+                                          }
+                                        },
+                                child:
+                                    loading
+                                        ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                        : const Text('Add'),
+                              ),
+                            ],
+                          ),
+                          if (error.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                error,
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 3,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Groups',
+                            style: GoogleFonts.montserrat(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          ...groups.isEmpty
+                              ? [
+                                Text(
+                                  'No groups yet.',
+                                  style: GoogleFonts.openSans(),
+                                ),
+                              ]
+                              : groups
+                                  .map(
+                                    (g) =>
+                                        Text(g, style: GoogleFonts.openSans()),
+                                  )
+                                  .toList(),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 3,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Pending Group Invites',
+                            style: GoogleFonts.montserrat(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          StreamBuilder<QuerySnapshot>(
+                            stream:
+                                FirebaseFirestore.instance
+                                    .collection('users')
+                                    .doc(user.uid)
+                                    .collection('pendingInvites')
+                                    .orderBy('timestamp', descending: true)
+                                    .snapshots(),
+                            builder: (context, snap) {
+                              if (!snap.hasData)
+                                return const CircularProgressIndicator();
+                              final docs = snap.data!.docs;
+                              if (docs.isEmpty)
+                                return Text(
+                                  'No pending invites.',
+                                  style: GoogleFonts.openSans(),
+                                );
+                              return Column(
+                                children:
+                                    docs.map((doc) {
+                                      final data =
+                                          doc.data() as Map<String, dynamic>;
+                                      final groupName = data['groupName'] ?? '';
+                                      final groupId = data['groupId'] ?? '';
+                                      return Card(
+                                        margin: const EdgeInsets.symmetric(
+                                          vertical: 4,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: ListTile(
+                                          leading: const Icon(
+                                            Icons.group,
+                                            color: Color(0xFF6D0EB5),
+                                          ),
+                                          title: Text(
+                                            'Group: $groupName',
+                                            style: GoogleFonts.montserrat(),
+                                          ),
+                                          subtitle: Text(
+                                            'Invited to join',
+                                            style: GoogleFonts.openSans(),
+                                          ),
+                                          trailing: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              IconButton(
+                                                icon: const Icon(
+                                                  Icons.check,
+                                                  color: Colors.green,
+                                                ),
+                                                onPressed:
+                                                    () => acceptInvite(
+                                                      doc.id,
+                                                      groupId,
+                                                      groupName,
+                                                    ),
+                                                tooltip: 'Accept',
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(
+                                                  Icons.close,
+                                                  color: Colors.red,
+                                                ),
+                                                onPressed:
+                                                    () => rejectInvite(doc.id),
+                                                tooltip: 'Reject',
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Center(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6D0EB5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                          horizontal: 32,
+                        ),
+                        elevation: 3,
+                      ),
+                      icon: const Icon(Icons.logout, color: Colors.white),
+                      label: Text(
+                        'Logout',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                      onPressed: () async {
+                        await FirebaseAuth.instance.signOut();
+                        Navigator.of(
+                          context,
+                        ).pushNamedAndRemoveUntil('/login', (route) => false);
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },

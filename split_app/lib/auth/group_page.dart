@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class GroupPage extends StatefulWidget {
@@ -239,7 +240,26 @@ class _GroupPageState extends State<GroupPage> {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
-      appBar: AppBar(title: const Text('Group Details')),
+      appBar: AppBar(
+        title: Text(
+          'Group Details',
+          style: GoogleFonts.montserrat(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6D0EB5), Color(0xFF4059F1)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+      ),
       body: FutureBuilder<DocumentSnapshot>(
         future:
             FirebaseFirestore.instance
@@ -254,342 +274,246 @@ class _GroupPageState extends State<GroupPage> {
           final admin = data['admin'] ?? '';
           final members = List<String>.from(data['members'] ?? []);
           final isAdmin = user != null && user.uid == admin;
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ListView(
-              children: [
-                Text('Group Name: $name', style: const TextStyle(fontSize: 18)),
-                const SizedBox(height: 8),
-                Text('Admin: $admin', style: const TextStyle(fontSize: 16)),
-                const SizedBox(height: 16),
-                const Text(
-                  'Members:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                ...members.map(
-                  (uid) => FutureBuilder<DocumentSnapshot>(
-                    future:
-                        FirebaseFirestore.instance
-                            .collection('users')
-                            .doc(uid)
-                            .get(),
-                    builder: (context, userSnap) {
-                      if (!userSnap.hasData) return const Text('Loading...');
-                      final userData =
-                          userSnap.data!.data() as Map<String, dynamic>?;
-                      if (userData == null) return Text(uid);
-                      return Text(
-                        userData['username'] ?? userData['email'] ?? uid,
-                      );
-                    },
+          return SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 3,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Group Name',
+                            style: GoogleFonts.montserrat(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(name, style: GoogleFonts.openSans(fontSize: 18)),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Admin',
+                            style: GoogleFonts.montserrat(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          FutureBuilder<DocumentSnapshot>(
+                            future:
+                                FirebaseFirestore.instance
+                                    .collection('users')
+                                    .doc(admin)
+                                    .get(),
+                            builder: (context, adminSnap) {
+                              if (!adminSnap.hasData)
+                                return const Text('Loading...');
+                              final adminData =
+                                  adminSnap.data!.data()
+                                      as Map<String, dynamic>?;
+                              final adminName =
+                                  adminData?['username'] ??
+                                  adminData?['email'] ??
+                                  admin;
+                              return Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: const Color(0xFF4059F1),
+                                    child: Icon(
+                                      Icons.star,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    adminName,
+                                    style: GoogleFonts.openSans(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Members',
+                            style: GoogleFonts.montserrat(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          ...members.map(
+                            (uid) => FutureBuilder<DocumentSnapshot>(
+                              future:
+                                  FirebaseFirestore.instance
+                                      .collection('users')
+                                      .doc(uid)
+                                      .get(),
+                              builder: (context, userSnap) {
+                                if (!userSnap.hasData)
+                                  return const Text('Loading...');
+                                final userData =
+                                    userSnap.data!.data()
+                                        as Map<String, dynamic>?;
+                                final name =
+                                    userData?['username'] ??
+                                    userData?['email'] ??
+                                    uid;
+                                return Row(
+                                  children: [
+                                    CircleAvatar(
+                                      backgroundColor: const Color(0xFF6D0EB5),
+                                      child: Icon(
+                                        Icons.person,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(name, style: GoogleFonts.openSans()),
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton(
+                  const SizedBox(height: 24),
+                  Center(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4059F1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                          horizontal: 32,
+                        ),
+                        elevation: 3,
+                      ),
+                      icon: const Icon(Icons.person_add, color: Colors.white),
+                      label: Text(
+                        'Invite User',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
                       onPressed:
                           () => Navigator.of(context).pushNamed(
                             '/invite_user',
                             arguments: widget.groupId,
                           ),
-                      child: const Text('Invite User'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                const Text(
-                  'Add Expense',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-                TextField(
-                  controller: _expenseTitleController,
-                  decoration: const InputDecoration(labelText: 'Title'),
-                ),
-                TextField(
-                  controller: _expenseAmountController,
-                  decoration: const InputDecoration(labelText: 'Amount'),
-                  keyboardType: TextInputType.number,
-                ),
-                DropdownButtonFormField<String>(
-                  value: _paidBy,
-                  items:
-                      members
-                          .map(
-                            (uid) => DropdownMenuItem(
-                              value: uid,
-                              child: FutureBuilder<DocumentSnapshot>(
-                                future:
-                                    FirebaseFirestore.instance
-                                        .collection('users')
-                                        .doc(uid)
-                                        .get(),
-                                builder: (context, userSnap) {
-                                  if (!userSnap.hasData)
-                                    return const Text('Loading...');
-                                  final userData =
-                                      userSnap.data!.data()
-                                          as Map<String, dynamic>?;
-                                  if (userData == null) return Text(uid);
-                                  return Text(
-                                    userData['username'] ??
-                                        userData['email'] ??
-                                        uid,
-                                  );
-                                },
-                              ),
-                            ),
-                          )
-                          .toList(),
-                  onChanged: (val) => setState(() => _paidBy = val),
-                  decoration: const InputDecoration(labelText: 'Paid By'),
-                ),
-                ListTile(
-                  title: Text(
-                    'Date: ${DateFormat('yyyy-MM-dd').format(_expenseDate)}',
-                  ),
-                  trailing: Icon(Icons.calendar_today),
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _expenseDate,
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
-                    );
-                    if (picked != null) setState(() => _expenseDate = picked);
-                  },
-                ),
-                TextField(
-                  controller: _expenseNotesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Notes (optional)',
-                  ),
-                ),
-                if (expenseError.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      expenseError,
-                      style: const TextStyle(color: Colors.red),
                     ),
                   ),
-                expenseLoading
-                    ? const CircularProgressIndicator()
-                    : ElevatedButton(
-                      onPressed: () => addExpense(members),
-                      child: const Text('Add Expense'),
+                  const SizedBox(height: 32),
+                  Text(
+                    'Expense History',
+                    style: GoogleFonts.montserrat(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
                     ),
-                const SizedBox(height: 32),
-                const Text(
-                  'Dashboard',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      builder:
-                          (context) => Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: FutureBuilder<Map<String, dynamic>>(
-                              future: calculateDashboard(members),
-                              builder: (context, dashSnap) {
-                                if (!dashSnap.hasData)
-                                  return const CircularProgressIndicator();
-                                final totalExpenses =
-                                    dashSnap.data!['totalExpenses'] as double;
-                                final share =
-                                    dashSnap.data!['share']
-                                        as Map<String, double>;
-                                return SingleChildScrollView(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                  ),
+                  const SizedBox(height: 8),
+                  FutureBuilder<QuerySnapshot>(
+                    future:
+                        FirebaseFirestore.instance
+                            .collection('groups')
+                            .doc(widget.groupId)
+                            .collection('expenses')
+                            .orderBy('date', descending: true)
+                            .get(),
+                    builder: (context, snap) {
+                      if (!snap.hasData)
+                        return const CircularProgressIndicator();
+                      final docs = snap.data!.docs;
+                      if (docs.isEmpty)
+                        return Text(
+                          'No expenses yet.',
+                          style: GoogleFonts.openSans(),
+                        );
+                      return Column(
+                        children:
+                            docs.map((doc) {
+                              final data = doc.data() as Map<String, dynamic>;
+                              return Card(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 2,
+                                margin: const EdgeInsets.symmetric(vertical: 6),
+                                child: ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: const Color(0xFF4059F1),
+                                    child: Icon(
+                                      Icons.attach_money,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  title: Text(
+                                    data['title'] ?? '',
+                                    style: GoogleFonts.montserrat(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    'Amount: ${data['amount']} | Paid by: ${data['paidBy']} | Date: ${DateFormat('yyyy-MM-dd').format((data['date'] as Timestamp).toDate())}',
+                                    style: GoogleFonts.openSans(),
+                                  ),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Text(
-                                        'Dashboard',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                                      Text(
-                                        'Total Expenses: Rs. ${totalExpenses.toStringAsFixed(2)}',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      const Text(
-                                        'Individual Share:',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      ...share.entries.map(
-                                        (e) => FutureBuilder<DocumentSnapshot>(
-                                          future:
-                                              FirebaseFirestore.instance
-                                                  .collection('users')
-                                                  .doc(e.key)
-                                                  .get(),
-                                          builder: (context, userSnap) {
-                                            if (!userSnap.hasData)
-                                              return const Text('Loading...');
-                                            final userData =
-                                                userSnap.data!.data()
-                                                    as Map<String, dynamic>?;
-                                            final name =
-                                                userData?['username'] ??
-                                                userData?['email'] ??
-                                                e.key;
-                                            return Text(
-                                              '$name: Rs. ${e.value.toStringAsFixed(2)}',
-                                            );
+                                      if (isAdmin)
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.delete,
+                                            color: Colors.red,
+                                          ),
+                                          tooltip: 'Delete Expense',
+                                          onPressed: () async {
+                                            await FirebaseFirestore.instance
+                                                .collection('users')
+                                                .doc(data['paidBy'])
+                                                .update({
+                                                  'cash': FieldValue.increment(
+                                                    (data['amount'] as num)
+                                                        .toDouble(),
+                                                  ),
+                                                });
+                                            await FirebaseFirestore.instance
+                                                .collection('groups')
+                                                .doc(widget.groupId)
+                                                .collection('expenses')
+                                                .doc(doc.id)
+                                                .delete();
                                           },
                                         ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      FutureBuilder<Map<String, double>>(
-                                        future: calculateBalances(members),
-                                        builder: (context, snap) {
-                                          if (!snap.hasData)
-                                            return const CircularProgressIndicator();
-                                          final balances = snap.data!;
-                                          return Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              const Text(
-                                                'Individual Balance:',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                              ...balances.entries.map(
-                                                (e) => FutureBuilder<
-                                                  DocumentSnapshot
-                                                >(
-                                                  future:
-                                                      FirebaseFirestore.instance
-                                                          .collection('users')
-                                                          .doc(e.key)
-                                                          .get(),
-                                                  builder: (context, userSnap) {
-                                                    if (!userSnap.hasData)
-                                                      return const Text(
-                                                        'Loading...',
-                                                      );
-                                                    final userData =
-                                                        userSnap.data!.data()
-                                                            as Map<
-                                                              String,
-                                                              dynamic
-                                                            >?;
-                                                    final name =
-                                                        userData?['username'] ??
-                                                        userData?['email'] ??
-                                                        e.key;
-                                                    return Text(
-                                                      '$name: Rs. ${e.value.toStringAsFixed(2)}',
-                                                    );
-                                                  },
-                                                ),
-                                              ),
-                                              const SizedBox(height: 16),
-                                              const Text(
-                                                'Individual Borrows:',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                              ..._whoOwesWhom(
-                                                balances,
-                                                members,
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      ),
+                                      if (data['notes'] != null &&
+                                          data['notes'].toString().isNotEmpty)
+                                        const Icon(Icons.note),
                                     ],
                                   ),
-                                );
-                              },
-                            ),
-                          ),
-                    );
-                  },
-                  child: const Text('Show Dashboard'),
-                ),
-                const SizedBox(height: 32),
-                const Text(
-                  'Expense History',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-                FutureBuilder<QuerySnapshot>(
-                  future:
-                      FirebaseFirestore.instance
-                          .collection('groups')
-                          .doc(widget.groupId)
-                          .collection('expenses')
-                          .orderBy('date', descending: true)
-                          .get(),
-                  builder: (context, snap) {
-                    if (!snap.hasData) return const CircularProgressIndicator();
-                    final docs = snap.data!.docs;
-                    if (docs.isEmpty) return const Text('No expenses yet.');
-                    return Column(
-                      children:
-                          docs.map((doc) {
-                            final data = doc.data() as Map<String, dynamic>;
-                            return ListTile(
-                              title: Text(data['title'] ?? ''),
-                              subtitle: Text(
-                                'Amount: ${data['amount']} | Paid by: ${data['paidBy']} | Date: ${DateFormat('yyyy-MM-dd').format((data['date'] as Timestamp).toDate())}',
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (isAdmin)
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete,
-                                        color: Colors.red,
-                                      ),
-                                      tooltip: 'Delete Expense',
-                                      onPressed: () async {
-                                        // Reverse cash deduction for payer
-                                        await FirebaseFirestore.instance
-                                            .collection('users')
-                                            .doc(data['paidBy'])
-                                            .update({
-                                              'cash': FieldValue.increment(
-                                                (data['amount'] as num)
-                                                    .toDouble(),
-                                              ),
-                                            });
-                                        // Delete expense
-                                        await FirebaseFirestore.instance
-                                            .collection('groups')
-                                            .doc(widget.groupId)
-                                            .collection('expenses')
-                                            .doc(doc.id)
-                                            .delete();
-                                      },
-                                    ),
-                                  if (data['notes'] != null &&
-                                      data['notes'].toString().isNotEmpty)
-                                    const Icon(Icons.note),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                    );
-                  },
-                ),
-              ],
+                                ),
+                              );
+                            }).toList(),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           );
         },
