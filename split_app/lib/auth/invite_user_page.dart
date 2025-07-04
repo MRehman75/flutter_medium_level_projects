@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:wave/wave.dart';
+import 'package:wave/config.dart';
 
 class InviteUserPage extends StatefulWidget {
   final String groupId;
@@ -110,70 +112,95 @@ class _InviteUserPageState extends State<InviteUserPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Center(
-          child: Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: WaveWidget(
+              config: CustomConfig(
+                gradients: [
+                  [const Color(0xFF6D0EB5), const Color(0xFF4059F1)],
+                  [const Color(0xFF4059F1), const Color(0xFF6D0EB5)],
+                ],
+                durations: [35000, 19440],
+                heightPercentages: [0.20, 0.23],
+                blur: const MaskFilter.blur(BlurStyle.solid, 10),
+                gradientBegin: Alignment.topLeft,
+                gradientEnd: Alignment.bottomRight,
+              ),
+              waveAmplitude: 0,
+              size: const Size(double.infinity, double.infinity),
             ),
-            elevation: 4,
+          ),
+          Positioned.fill(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Invite a User',
-                    style: GoogleFonts.montserrat(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 22,
-                    ),
+              child: Center(
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _inviteController,
-                    decoration: InputDecoration(
-                      labelText: 'Username or Email',
-                      labelStyle: GoogleFonts.openSans(),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                  if (error.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        error,
-                        style: GoogleFonts.openSans(color: Colors.red),
-                      ),
-                    ),
-                  const SizedBox(height: 16),
-                  loading
-                      ? const CircularProgressIndicator()
-                      : ElevatedButton(
-                        onPressed: inviteUser,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4059F1),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 14,
-                            horizontal: 32,
+                  elevation: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Invite a User',
+                          style: GoogleFonts.montserrat(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
                           ),
                         ),
-                        child: Text(
-                          'Send Invite',
-                          style: GoogleFonts.montserrat(color: Colors.white),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _inviteController,
+                          decoration: InputDecoration(
+                            labelText: 'Username or Email',
+                            labelStyle: GoogleFonts.openSans(),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
                         ),
-                      ),
-                ],
+                        if (error.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              error,
+                              style: GoogleFonts.openSans(color: Colors.red),
+                            ),
+                          ),
+                        const SizedBox(height: 16),
+                        loading
+                            ? const CircularProgressIndicator()
+                            : ElevatedButton(
+                              onPressed: inviteUser,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF4059F1),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                  horizontal: 32,
+                                ),
+                              ),
+                              child: Text(
+                                'Send Invite',
+                                style: GoogleFonts.montserrat(
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

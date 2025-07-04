@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:wave/wave.dart';
+import 'package:wave/config.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -89,202 +91,244 @@ class HomePage extends StatelessWidget {
         elevation: 0,
         backgroundColor: Colors.transparent,
       ),
-      body: FutureBuilder<DocumentSnapshot>(
-        future: userDoc.get(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData)
-            return const Center(child: CircularProgressIndicator());
-          final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
-          final groupIds = List<String>.from(data['groups'] ?? []);
-          return Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Welcome,',
-                  style: GoogleFonts.openSans(
-                    fontSize: 20,
-                    color: Colors.grey[700],
-                  ),
-                ),
-                Text(
-                  user.email ?? "Unknown",
-                  style: GoogleFonts.montserrat(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4059F1),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          elevation: 3,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: WaveWidget(
+              config: CustomConfig(
+                gradients: [
+                  [const Color(0xFF6D0EB5), const Color(0xFF4059F1)],
+                  [const Color(0xFF4059F1), const Color(0xFF6D0EB5)],
+                ],
+                durations: [35000, 19440],
+                heightPercentages: [0.20, 0.23],
+                blur: const MaskFilter.blur(BlurStyle.solid, 10),
+                gradientBegin: Alignment.topLeft,
+                gradientEnd: Alignment.bottomRight,
+              ),
+              waveAmplitude: 0,
+              size: const Size(double.infinity, double.infinity),
+            ),
+          ),
+          Positioned.fill(
+            child: FutureBuilder<DocumentSnapshot>(
+              future: userDoc.get(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData)
+                  return const Center(child: CircularProgressIndicator());
+                final data =
+                    snapshot.data!.data() as Map<String, dynamic>? ?? {};
+                final groupIds = List<String>.from(data['groups'] ?? []);
+                return Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Welcome,',
+                        style: GoogleFonts.openSans(
+                          fontSize: 20,
+                          color: Colors.grey[700],
                         ),
-                        icon: const Icon(
-                          Icons.account_circle,
-                          color: Colors.white,
-                        ),
-                        label: Text(
-                          'Profile',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 16,
-                            color: Colors.white,
-                          ),
-                        ),
-                        onPressed:
-                            () => Navigator.of(context).pushNamed('/profile'),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF6D0EB5),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          elevation: 3,
+                      Text(
+                        user.email ?? "Unknown",
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 24,
                         ),
-                        icon: const Icon(Icons.group_add, color: Colors.white),
-                        label: Text(
-                          'Create Group',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 16,
-                            color: Colors.white,
-                          ),
-                        ),
-                        onPressed:
-                            () => Navigator.of(
-                              context,
-                            ).pushNamed('/create_group'),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                Text(
-                  'Your Groups',
-                  style: GoogleFonts.montserrat(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child:
-                      groupIds.isEmpty
-                          ? Center(
-                            child: Text(
-                              'No groups yet.',
-                              style: GoogleFonts.openSans(fontSize: 16),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF4059F1),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                elevation: 3,
+                              ),
+                              icon: const Icon(
+                                Icons.account_circle,
+                                color: Colors.white,
+                              ),
+                              label: Text(
+                                'Profile',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              onPressed:
+                                  () => Navigator.of(
+                                    context,
+                                  ).pushNamed('/profile'),
                             ),
-                          )
-                          : FutureBuilder<QuerySnapshot>(
-                            future:
-                                FirebaseFirestore.instance
-                                    .collection('groups')
-                                    .where(
-                                      FieldPath.documentId,
-                                      whereIn: groupIds,
-                                    )
-                                    .get(),
-                            builder: (context, groupSnap) {
-                              if (!groupSnap.hasData)
-                                return const CircularProgressIndicator();
-                              final groupDocs = groupSnap.data!.docs;
-                              if (groupDocs.isEmpty)
-                                return Center(
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF6D0EB5),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                elevation: 3,
+                              ),
+                              icon: const Icon(
+                                Icons.group_add,
+                                color: Colors.white,
+                              ),
+                              label: Text(
+                                'Create Group',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              onPressed:
+                                  () => Navigator.of(
+                                    context,
+                                  ).pushNamed('/create_group'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                      Text(
+                        'Your Groups',
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child:
+                            groupIds.isEmpty
+                                ? Center(
                                   child: Text(
-                                    'No groups found.',
+                                    'No groups yet.',
                                     style: GoogleFonts.openSans(fontSize: 16),
                                   ),
-                                );
-                              return ListView.builder(
-                                itemCount: groupDocs.length,
-                                itemBuilder: (context, index) {
-                                  final groupData =
-                                      groupDocs[index].data()
-                                          as Map<String, dynamic>;
-                                  final groupId = groupDocs[index].id;
-                                  final groupName =
-                                      groupData['name'] ?? 'Unnamed Group';
-                                  return Card(
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    elevation: 4,
-                                    margin: const EdgeInsets.symmetric(
-                                      vertical: 8,
-                                      horizontal: 0,
-                                    ),
-                                    child: ListTile(
-                                      leading: CircleAvatar(
-                                        backgroundColor: const Color(
-                                          0xFF6D0EB5,
+                                )
+                                : FutureBuilder<QuerySnapshot>(
+                                  future:
+                                      FirebaseFirestore.instance
+                                          .collection('groups')
+                                          .where(
+                                            FieldPath.documentId,
+                                            whereIn: groupIds,
+                                          )
+                                          .get(),
+                                  builder: (context, groupSnap) {
+                                    if (!groupSnap.hasData)
+                                      return const CircularProgressIndicator();
+                                    final groupDocs = groupSnap.data!.docs;
+                                    if (groupDocs.isEmpty)
+                                      return Center(
+                                        child: Text(
+                                          'No groups found.',
+                                          style: GoogleFonts.openSans(
+                                            fontSize: 16,
+                                          ),
                                         ),
-                                        child: Icon(
-                                          Icons.group,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      title: Text(
-                                        groupName,
-                                        style: GoogleFonts.montserrat(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                                      subtitle: Text(
-                                        'Tap to view details',
-                                        style: GoogleFonts.openSans(),
-                                      ),
-                                      trailing: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          IconButton(
-                                            icon: const Icon(
-                                              Icons.dashboard,
-                                              color: Color(0xFF4059F1),
+                                      );
+                                    return ListView.builder(
+                                      itemCount: groupDocs.length,
+                                      itemBuilder: (context, index) {
+                                        final groupData =
+                                            groupDocs[index].data()
+                                                as Map<String, dynamic>;
+                                        final groupId = groupDocs[index].id;
+                                        final groupName =
+                                            groupData['name'] ??
+                                            'Unnamed Group';
+                                        return Card(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              16,
                                             ),
-                                            tooltip: 'Dashboard',
-                                            onPressed: () {
-                                              Navigator.of(context).pushNamed(
-                                                '/group_dashboard',
-                                                arguments: groupId,
-                                              );
-                                            },
                                           ),
-                                          Icon(
-                                            Icons.arrow_forward_ios,
-                                            color: Colors.grey[400],
+                                          elevation: 4,
+                                          margin: const EdgeInsets.symmetric(
+                                            vertical: 8,
+                                            horizontal: 0,
                                           ),
-                                        ],
-                                      ),
-                                      onTap:
-                                          () => Navigator.of(context).pushNamed(
-                                            '/group',
-                                            arguments: groupId,
+                                          child: ListTile(
+                                            leading: CircleAvatar(
+                                              backgroundColor: const Color(
+                                                0xFF6D0EB5,
+                                              ),
+                                              child: Icon(
+                                                Icons.group,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            title: Text(
+                                              groupName,
+                                              style: GoogleFonts.montserrat(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 18,
+                                              ),
+                                            ),
+                                            subtitle: Text(
+                                              'Tap to view details',
+                                              style: GoogleFonts.openSans(),
+                                            ),
+                                            trailing: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.dashboard,
+                                                    color: Color(0xFF4059F1),
+                                                  ),
+                                                  tooltip: 'Dashboard',
+                                                  onPressed: () {
+                                                    Navigator.of(
+                                                      context,
+                                                    ).pushNamed(
+                                                      '/group_dashboard',
+                                                      arguments: groupId,
+                                                    );
+                                                  },
+                                                ),
+                                                Icon(
+                                                  Icons.arrow_forward_ios,
+                                                  color: Colors.grey[400],
+                                                ),
+                                              ],
+                                            ),
+                                            onTap:
+                                                () => Navigator.of(
+                                                  context,
+                                                ).pushNamed(
+                                                  '/group',
+                                                  arguments: groupId,
+                                                ),
                                           ),
-                                    ),
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                ),
-              ],
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }

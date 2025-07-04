@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:wave/wave.dart';
+import 'package:wave/config.dart';
 
 class AddExpensePage extends StatefulWidget {
   final String groupId;
@@ -96,167 +98,196 @@ class _AddExpensePageState extends State<AddExpensePage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: FutureBuilder<DocumentSnapshot>(
-        future:
-            FirebaseFirestore.instance
-                .collection('groups')
-                .doc(widget.groupId)
-                .get(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData)
-            return const Center(child: CircularProgressIndicator());
-          final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
-          final members = List<String>.from(data['members'] ?? []);
-          return Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Center(
-              child: Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                elevation: 4,
-                child: Padding(
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: WaveWidget(
+              config: CustomConfig(
+                gradients: [
+                  [const Color(0xFF6D0EB5), const Color(0xFF4059F1)],
+                  [const Color(0xFF4059F1), const Color(0xFF6D0EB5)],
+                ],
+                durations: [35000, 19440],
+                heightPercentages: [0.20, 0.23],
+                blur: const MaskFilter.blur(BlurStyle.solid, 10),
+                gradientBegin: Alignment.topLeft,
+                gradientEnd: Alignment.bottomRight,
+              ),
+              waveAmplitude: 0,
+              size: const Size(double.infinity, double.infinity),
+            ),
+          ),
+          Positioned.fill(
+            child: FutureBuilder<DocumentSnapshot>(
+              future:
+                  FirebaseFirestore.instance
+                      .collection('groups')
+                      .doc(widget.groupId)
+                      .get(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData)
+                  return const Center(child: CircularProgressIndicator());
+                final data =
+                    snapshot.data!.data() as Map<String, dynamic>? ?? {};
+                final members = List<String>.from(data['members'] ?? []);
+                return Padding(
                   padding: const EdgeInsets.all(24.0),
-                  child: ListView(
-                    shrinkWrap: true,
-                    children: [
-                      Text(
-                        'Add Expense',
-                        style: GoogleFonts.montserrat(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 22,
-                        ),
+                  child: Center(
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _expenseTitleController,
-                        decoration: InputDecoration(
-                          labelText: 'Title',
-                          labelStyle: GoogleFonts.openSans(),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _expenseAmountController,
-                        decoration: InputDecoration(
-                          labelText: 'Amount',
-                          labelStyle: GoogleFonts.openSans(),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        keyboardType: TextInputType.number,
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        value: _paidBy,
-                        items:
-                            members
-                                .map(
-                                  (uid) => DropdownMenuItem(
-                                    value: uid,
-                                    child: FutureBuilder<DocumentSnapshot>(
-                                      future:
-                                          FirebaseFirestore.instance
-                                              .collection('users')
-                                              .doc(uid)
-                                              .get(),
-                                      builder: (context, userSnap) {
-                                        if (!userSnap.hasData)
-                                          return const Text('Loading...');
-                                        final userData =
-                                            userSnap.data!.data()
-                                                as Map<String, dynamic>?;
-                                        if (userData == null) return Text(uid);
-                                        return Text(
-                                          userData['username'] ??
-                                              userData['email'] ??
-                                              uid,
-                                          style: GoogleFonts.openSans(),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                )
-                                .toList(),
-                        onChanged: (val) => setState(() => _paidBy = val),
-                        decoration: InputDecoration(
-                          labelText: 'Paid By',
-                          labelStyle: GoogleFonts.openSans(),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ListTile(
-                        title: Text(
-                          'Date: ${DateFormat('yyyy-MM-dd').format(_expenseDate)}',
-                          style: GoogleFonts.openSans(),
-                        ),
-                        trailing: const Icon(Icons.calendar_today),
-                        onTap: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: _expenseDate,
-                            firstDate: DateTime(2000),
-                            lastDate: DateTime(2100),
-                          );
-                          if (picked != null)
-                            setState(() => _expenseDate = picked);
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _expenseNotesController,
-                        decoration: InputDecoration(
-                          labelText: 'Notes (optional)',
-                          labelStyle: GoogleFonts.openSans(),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                      if (expenseError.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            expenseError,
-                            style: GoogleFonts.openSans(color: Colors.red),
-                          ),
-                        ),
-                      const SizedBox(height: 16),
-                      expenseLoading
-                          ? const CircularProgressIndicator()
-                          : ElevatedButton(
-                            onPressed: () => addExpense(members),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF4059F1),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 14,
-                                horizontal: 32,
-                              ),
-                            ),
-                            child: Text(
+                      elevation: 4,
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: ListView(
+                          shrinkWrap: true,
+                          children: [
+                            Text(
                               'Add Expense',
                               style: GoogleFonts.montserrat(
-                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 22,
                               ),
                             ),
-                          ),
-                    ],
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: _expenseTitleController,
+                              decoration: InputDecoration(
+                                labelText: 'Title',
+                                labelStyle: GoogleFonts.openSans(),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: _expenseAmountController,
+                              decoration: InputDecoration(
+                                labelText: 'Amount',
+                                labelStyle: GoogleFonts.openSans(),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              keyboardType: TextInputType.number,
+                            ),
+                            const SizedBox(height: 16),
+                            DropdownButtonFormField<String>(
+                              value: _paidBy,
+                              items:
+                                  members
+                                      .map(
+                                        (uid) => DropdownMenuItem(
+                                          value: uid,
+                                          child: FutureBuilder<
+                                            DocumentSnapshot
+                                          >(
+                                            future:
+                                                FirebaseFirestore.instance
+                                                    .collection('users')
+                                                    .doc(uid)
+                                                    .get(),
+                                            builder: (context, userSnap) {
+                                              if (!userSnap.hasData)
+                                                return const Text('Loading...');
+                                              final userData =
+                                                  userSnap.data!.data()
+                                                      as Map<String, dynamic>?;
+                                              if (userData == null)
+                                                return Text(uid);
+                                              return Text(
+                                                userData['username'] ??
+                                                    userData['email'] ??
+                                                    uid,
+                                                style: GoogleFonts.openSans(),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      )
+                                      .toList(),
+                              onChanged: (val) => setState(() => _paidBy = val),
+                              decoration: InputDecoration(
+                                labelText: 'Paid By',
+                                labelStyle: GoogleFonts.openSans(),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            ListTile(
+                              title: Text(
+                                'Date: ${DateFormat('yyyy-MM-dd').format(_expenseDate)}',
+                                style: GoogleFonts.openSans(),
+                              ),
+                              trailing: const Icon(Icons.calendar_today),
+                              onTap: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: _expenseDate,
+                                  firstDate: DateTime(2000),
+                                  lastDate: DateTime(2100),
+                                );
+                                if (picked != null)
+                                  setState(() => _expenseDate = picked);
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: _expenseNotesController,
+                              decoration: InputDecoration(
+                                labelText: 'Notes (optional)',
+                                labelStyle: GoogleFonts.openSans(),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                            if (expenseError.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  expenseError,
+                                  style: GoogleFonts.openSans(
+                                    color: Colors.red,
+                                  ),
+                                ),
+                              ),
+                            const SizedBox(height: 16),
+                            expenseLoading
+                                ? const CircularProgressIndicator()
+                                : ElevatedButton(
+                                  onPressed: () => addExpense(members),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF4059F1),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(30),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 14,
+                                      horizontal: 32,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Add Expense',
+                                    style: GoogleFonts.montserrat(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }

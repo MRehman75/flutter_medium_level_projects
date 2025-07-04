@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:wave/wave.dart';
+import 'package:wave/config.dart';
 
 class GroupPage extends StatefulWidget {
   final String groupId;
@@ -260,234 +262,279 @@ class _GroupPageState extends State<GroupPage> {
         elevation: 0,
         backgroundColor: Colors.transparent,
       ),
-      body: FutureBuilder<DocumentSnapshot>(
-        future:
-            FirebaseFirestore.instance
-                .collection('groups')
-                .doc(widget.groupId)
-                .get(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData)
-            return const Center(child: CircularProgressIndicator());
-          final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
-          final name = data['name'] ?? '';
-          final admin = data['admin'] ?? '';
-          final members = List<String>.from(data['members'] ?? []);
-          final isAdmin = user != null && user.uid == admin;
-          return SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 3,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Group Name',
-                            style: GoogleFonts.montserrat(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(name, style: GoogleFonts.openSans(fontSize: 18)),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Admin',
-                            style: GoogleFonts.montserrat(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          FutureBuilder<DocumentSnapshot>(
-                            future:
-                                FirebaseFirestore.instance
-                                    .collection('users')
-                                    .doc(admin)
-                                    .get(),
-                            builder: (context, adminSnap) {
-                              if (!adminSnap.hasData)
-                                return const Text('Loading...');
-                              final adminData =
-                                  adminSnap.data!.data()
-                                      as Map<String, dynamic>?;
-                              final adminName =
-                                  adminData?['username'] ??
-                                  adminData?['email'] ??
-                                  admin;
-                              return Row(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundColor: const Color(0xFF4059F1),
-                                    child: Icon(
-                                      Icons.star,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    adminName,
-                                    style: GoogleFonts.openSans(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Members',
-                            style: GoogleFonts.montserrat(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          ...members.map(
-                            (uid) => FutureBuilder<DocumentSnapshot>(
-                              future:
-                                  FirebaseFirestore.instance
-                                      .collection('users')
-                                      .doc(uid)
-                                      .get(),
-                              builder: (context, userSnap) {
-                                if (!userSnap.hasData)
-                                  return const Text('Loading...');
-                                final userData =
-                                    userSnap.data!.data()
-                                        as Map<String, dynamic>?;
-                                final name =
-                                    userData?['username'] ??
-                                    userData?['email'] ??
-                                    uid;
-                                return Row(
-                                  children: [
-                                    CircleAvatar(
-                                      backgroundColor: const Color(0xFF6D0EB5),
-                                      child: Icon(
-                                        Icons.person,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(name, style: GoogleFonts.openSans()),
-                                  ],
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Expense History',
-                    style: GoogleFonts.montserrat(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  FutureBuilder<QuerySnapshot>(
-                    future:
-                        FirebaseFirestore.instance
-                            .collection('groups')
-                            .doc(widget.groupId)
-                            .collection('expenses')
-                            .orderBy('date', descending: true)
-                            .get(),
-                    builder: (context, snap) {
-                      if (!snap.hasData)
-                        return const CircularProgressIndicator();
-                      final docs = snap.data!.docs;
-                      if (docs.isEmpty)
-                        return Text(
-                          'No expenses yet.',
-                          style: GoogleFonts.openSans(),
-                        );
-                      return Column(
-                        children:
-                            docs.map((doc) {
-                              final data = doc.data() as Map<String, dynamic>;
-                              return Card(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                elevation: 2,
-                                margin: const EdgeInsets.symmetric(vertical: 6),
-                                child: ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: const Color(0xFF4059F1),
-                                    child: Icon(
-                                      Icons.attach_money,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  title: Text(
-                                    data['title'] ?? '',
-                                    style: GoogleFonts.montserrat(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    'Amount: ${data['amount']} | Paid by: ${data['paidBy']} | Date: ${DateFormat('yyyy-MM-dd').format((data['date'] as Timestamp).toDate())}',
-                                    style: GoogleFonts.openSans(),
-                                  ),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      if (isAdmin)
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.delete,
-                                            color: Colors.red,
-                                          ),
-                                          tooltip: 'Delete Expense',
-                                          onPressed: () async {
-                                            await FirebaseFirestore.instance
-                                                .collection('users')
-                                                .doc(data['paidBy'])
-                                                .update({
-                                                  'cash': FieldValue.increment(
-                                                    (data['amount'] as num)
-                                                        .toDouble(),
-                                                  ),
-                                                });
-                                            await FirebaseFirestore.instance
-                                                .collection('groups')
-                                                .doc(widget.groupId)
-                                                .collection('expenses')
-                                                .doc(doc.id)
-                                                .delete();
-                                          },
-                                        ),
-                                      if (data['notes'] != null &&
-                                          data['notes'].toString().isNotEmpty)
-                                        const Icon(Icons.note),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                      );
-                    },
-                  ),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: WaveWidget(
+              config: CustomConfig(
+                gradients: [
+                  [const Color(0xFF6D0EB5), const Color(0xFF4059F1)],
+                  [const Color(0xFF4059F1), const Color(0xFF6D0EB5)],
                 ],
+                durations: [35000, 19440],
+                heightPercentages: [0.20, 0.23],
+                blur: const MaskFilter.blur(BlurStyle.solid, 10),
+                gradientBegin: Alignment.topLeft,
+                gradientEnd: Alignment.bottomRight,
               ),
+              waveAmplitude: 0,
+              size: const Size(double.infinity, double.infinity),
             ),
-          );
-        },
+          ),
+          Positioned.fill(
+            child: FutureBuilder<DocumentSnapshot>(
+              future:
+                  FirebaseFirestore.instance
+                      .collection('groups')
+                      .doc(widget.groupId)
+                      .get(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData)
+                  return const Center(child: CircularProgressIndicator());
+                final data =
+                    snapshot.data!.data() as Map<String, dynamic>? ?? {};
+                final name = data['name'] ?? '';
+                final admin = data['admin'] ?? '';
+                final members = List<String>.from(data['members'] ?? []);
+                final isAdmin = user != null && user.uid == admin;
+                return SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 3,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Group Name',
+                                  style: GoogleFonts.montserrat(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  name,
+                                  style: GoogleFonts.openSans(fontSize: 18),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Admin',
+                                  style: GoogleFonts.montserrat(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                FutureBuilder<DocumentSnapshot>(
+                                  future:
+                                      FirebaseFirestore.instance
+                                          .collection('users')
+                                          .doc(admin)
+                                          .get(),
+                                  builder: (context, adminSnap) {
+                                    if (!adminSnap.hasData)
+                                      return const Text('Loading...');
+                                    final adminData =
+                                        adminSnap.data!.data()
+                                            as Map<String, dynamic>?;
+                                    final adminName =
+                                        adminData?['username'] ??
+                                        adminData?['email'] ??
+                                        admin;
+                                    return Row(
+                                      children: [
+                                        CircleAvatar(
+                                          backgroundColor: const Color(
+                                            0xFF4059F1,
+                                          ),
+                                          child: Icon(
+                                            Icons.star,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          adminName,
+                                          style: GoogleFonts.openSans(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Members',
+                                  style: GoogleFonts.montserrat(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                ...members.map(
+                                  (uid) => FutureBuilder<DocumentSnapshot>(
+                                    future:
+                                        FirebaseFirestore.instance
+                                            .collection('users')
+                                            .doc(uid)
+                                            .get(),
+                                    builder: (context, userSnap) {
+                                      if (!userSnap.hasData)
+                                        return const Text('Loading...');
+                                      final userData =
+                                          userSnap.data!.data()
+                                              as Map<String, dynamic>?;
+                                      final name =
+                                          userData?['username'] ??
+                                          userData?['email'] ??
+                                          uid;
+                                      return Row(
+                                        children: [
+                                          CircleAvatar(
+                                            backgroundColor: const Color(
+                                              0xFF6D0EB5,
+                                            ),
+                                            child: Icon(
+                                              Icons.person,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            name,
+                                            style: GoogleFonts.openSans(),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Expense History',
+                          style: GoogleFonts.montserrat(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        FutureBuilder<QuerySnapshot>(
+                          future:
+                              FirebaseFirestore.instance
+                                  .collection('groups')
+                                  .doc(widget.groupId)
+                                  .collection('expenses')
+                                  .orderBy('date', descending: true)
+                                  .get(),
+                          builder: (context, snap) {
+                            if (!snap.hasData)
+                              return const CircularProgressIndicator();
+                            final docs = snap.data!.docs;
+                            if (docs.isEmpty)
+                              return Text(
+                                'No expenses yet.',
+                                style: GoogleFonts.openSans(),
+                              );
+                            return Column(
+                              children:
+                                  docs.map((doc) {
+                                    final data =
+                                        doc.data() as Map<String, dynamic>;
+                                    return Card(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      elevation: 2,
+                                      margin: const EdgeInsets.symmetric(
+                                        vertical: 6,
+                                      ),
+                                      child: ListTile(
+                                        leading: CircleAvatar(
+                                          backgroundColor: const Color(
+                                            0xFF4059F1,
+                                          ),
+                                          child: Icon(
+                                            Icons.attach_money,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                        title: Text(
+                                          data['title'] ?? '',
+                                          style: GoogleFonts.montserrat(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        subtitle: Text(
+                                          'Amount: ${data['amount']} | Paid by: ${data['paidBy']} | Date: ${DateFormat('yyyy-MM-dd').format((data['date'] as Timestamp).toDate())}',
+                                          style: GoogleFonts.openSans(),
+                                        ),
+                                        trailing: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            if (isAdmin)
+                                              IconButton(
+                                                icon: const Icon(
+                                                  Icons.delete,
+                                                  color: Colors.red,
+                                                ),
+                                                tooltip: 'Delete Expense',
+                                                onPressed: () async {
+                                                  await FirebaseFirestore
+                                                      .instance
+                                                      .collection('users')
+                                                      .doc(data['paidBy'])
+                                                      .update({
+                                                        'cash':
+                                                            FieldValue.increment(
+                                                              (data['amount']
+                                                                      as num)
+                                                                  .toDouble(),
+                                                            ),
+                                                      });
+                                                  await FirebaseFirestore
+                                                      .instance
+                                                      .collection('groups')
+                                                      .doc(widget.groupId)
+                                                      .collection('expenses')
+                                                      .doc(doc.id)
+                                                      .delete();
+                                                },
+                                              ),
+                                            if (data['notes'] != null &&
+                                                data['notes']
+                                                    .toString()
+                                                    .isNotEmpty)
+                                              const Icon(Icons.note),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: BottomAppBar(
         shape: const CircularNotchedRectangle(),
