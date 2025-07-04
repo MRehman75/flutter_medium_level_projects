@@ -7,6 +7,9 @@ import 'auth/home_page.dart';
 import 'auth/profile_page.dart';
 import 'auth/create_group_page.dart';
 import 'auth/group_page.dart';
+import 'auth/invite_user_page.dart';
+import 'auth/group_dashboard_page.dart';
+import 'auth/add_expense_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +46,24 @@ class MyApp extends StatelessWidget {
           final groupId = settings.arguments as String;
           return MaterialPageRoute(
             builder: (context) => GroupPage(groupId: groupId),
+          );
+        }
+        if (settings.name == '/invite_user') {
+          final groupId = settings.arguments as String;
+          return MaterialPageRoute(
+            builder: (context) => InviteUserPage(groupId: groupId),
+          );
+        }
+        if (settings.name == '/group_dashboard') {
+          final groupId = settings.arguments as String;
+          return MaterialPageRoute(
+            builder: (context) => GroupDashboardPage(groupId: groupId),
+          );
+        }
+        if (settings.name == '/add_expense') {
+          final groupId = settings.arguments as String;
+          return MaterialPageRoute(
+            builder: (context) => AddExpensePage(groupId: groupId),
           );
         }
         return null;

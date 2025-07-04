@@ -284,29 +284,20 @@ class _GroupPageState extends State<GroupPage> {
                     },
                   ),
                 ),
-                if (isAdmin) ...[
-                  const SizedBox(height: 24),
-                  TextField(
-                    controller: _inviteController,
-                    decoration: const InputDecoration(
-                      labelText: 'Invite by username or email',
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed:
+                          () => Navigator.of(context).pushNamed(
+                            '/invite_user',
+                            arguments: widget.groupId,
+                          ),
+                      child: const Text('Invite User'),
                     ),
-                  ),
-                  if (error.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        error,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  loading
-                      ? const CircularProgressIndicator()
-                      : ElevatedButton(
-                        onPressed: () => inviteUser(),
-                        child: const Text('Invite User'),
-                      ),
-                ],
+                  ],
+                ),
                 const SizedBox(height: 32),
                 const Text(
                   'Add Expense',

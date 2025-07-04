@@ -33,6 +33,41 @@ class _ProfilePageState extends State<ProfilePage> {
     });
   }
 
+  Future<void> acceptInvite(
+    String inviteId,
+    String groupId,
+    String groupName,
+  ) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    // Add user to group members
+    await FirebaseFirestore.instance.collection('groups').doc(groupId).update({
+      'members': FieldValue.arrayUnion([user.uid]),
+    });
+    // Add group to user's groups
+    await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+      'groups': FieldValue.arrayUnion([groupId]),
+    });
+    // Remove invite
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('pendingInvites')
+        .doc(inviteId)
+        .delete();
+  }
+
+  Future<void> rejectInvite(String inviteId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('pendingInvites')
+        .doc(inviteId)
+        .delete();
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -121,6 +156,77 @@ class _ProfilePageState extends State<ProfilePage> {
                 ...groups.isEmpty
                     ? [const Text('No groups yet.')]
                     : groups.map((g) => Text(g)).toList(),
+                const SizedBox(height: 16),
+                // Pending Invites
+                const Text(
+                  'Pending Group Invites:',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                StreamBuilder<QuerySnapshot>(
+                  stream:
+                      FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(user.uid)
+                          .collection('pendingInvites')
+                          .orderBy('timestamp', descending: true)
+                          .snapshots(),
+                  builder: (context, snap) {
+                    if (!snap.hasData) return const CircularProgressIndicator();
+                    final docs = snap.data!.docs;
+                    if (docs.isEmpty) return const Text('No pending invites.');
+                    return Column(
+                      children:
+                          docs.map((doc) {
+                            final data = doc.data() as Map<String, dynamic>;
+                            final groupName = data['groupName'] ?? '';
+                            final groupId = data['groupId'] ?? '';
+                            return Card(
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                              child: ListTile(
+                                title: Text('Group: $groupName'),
+                                subtitle: Text('Invited to join'),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.check,
+                                        color: Colors.green,
+                                      ),
+                                      onPressed:
+                                          () => acceptInvite(
+                                            doc.id,
+                                            groupId,
+                                            groupName,
+                                          ),
+                                      tooltip: 'Accept',
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.close,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed: () => rejectInvite(doc.id),
+                                      tooltip: 'Reject',
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () async {
+                    await FirebaseAuth.instance.signOut();
+                    Navigator.of(
+                      context,
+                    ).pushNamedAndRemoveUntil('/login', (route) => false);
+                  },
+                  child: const Text('Logout'),
+                ),
               ],
             ),
           );
