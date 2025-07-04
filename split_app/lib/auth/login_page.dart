@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class LoginPage extends StatefulWidget {
   final VoidCallback onRegisterClicked;
@@ -86,71 +87,218 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     if (showVerifyMessage) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Verify Email')),
+        appBar: AppBar(
+          title: Text(
+            'Verify Email',
+            style: GoogleFonts.montserrat(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF6D0EB5), Color(0xFF4059F1)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
         body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'Your email is not verified.\nPlease check your inbox and verify your email before logging in.',
-                textAlign: TextAlign.center,
+          padding: const EdgeInsets.all(24.0),
+          child: Center(
+            child: Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
               ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: checkVerification,
-                child: const Text('Check Verification'),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: resendVerificationEmail,
-                child: const Text('Resend Verification Email'),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => setState(() => showVerifyMessage = false),
-                child: const Text('Back to Login'),
-              ),
-              if (error.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(error, style: const TextStyle(color: Colors.red)),
+              elevation: 4,
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Your email is not verified.\nPlease check your inbox and verify your email before logging in.',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.openSans(fontSize: 16),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: checkVerification,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4059F1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                          horizontal: 32,
+                        ),
+                      ),
+                      child: Text(
+                        'Check Verification',
+                        style: GoogleFonts.montserrat(color: Colors.white),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: resendVerificationEmail,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6D0EB5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                          horizontal: 32,
+                        ),
+                      ),
+                      child: Text(
+                        'Resend Verification Email',
+                        style: GoogleFonts.montserrat(color: Colors.white),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed:
+                          () => setState(() => showVerifyMessage = false),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey[400],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 14,
+                          horizontal: 32,
+                        ),
+                      ),
+                      child: Text(
+                        'Back to Login',
+                        style: GoogleFonts.montserrat(color: Colors.white),
+                      ),
+                    ),
+                    if (error.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          error,
+                          style: GoogleFonts.openSans(color: Colors.red),
+                        ),
+                      ),
+                  ],
                 ),
-            ],
+              ),
+            ),
           ),
         ),
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
+      appBar: AppBar(
+        title: Text(
+          'Login',
+          style: GoogleFonts.montserrat(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6D0EB5), Color(0xFF4059F1)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
+        padding: const EdgeInsets.all(24.0),
+        child: Center(
+          child: Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'Password'),
-              obscureText: true,
-            ),
-            if (error.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(error, style: const TextStyle(color: Colors.red)),
+            elevation: 4,
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Welcome Back!',
+                    style: GoogleFonts.montserrat(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      labelStyle: GoogleFonts.openSans(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _passwordController,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      labelStyle: GoogleFonts.openSans(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    obscureText: true,
+                  ),
+                  if (error.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        error,
+                        style: GoogleFonts.openSans(color: Colors.red),
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                  loading
+                      ? const CircularProgressIndicator()
+                      : ElevatedButton(
+                        onPressed: login,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF4059F1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 14,
+                            horizontal: 32,
+                          ),
+                        ),
+                        child: Text(
+                          'Login',
+                          style: GoogleFonts.montserrat(color: Colors.white),
+                        ),
+                      ),
+                  TextButton(
+                    onPressed: widget.onRegisterClicked,
+                    child: Text(
+                      'Don\'t have an account? Register',
+                      style: GoogleFonts.openSans(),
+                    ),
+                  ),
+                ],
               ),
-            const SizedBox(height: 16),
-            loading
-                ? const CircularProgressIndicator()
-                : ElevatedButton(onPressed: login, child: const Text('Login')),
-            TextButton(
-              onPressed: widget.onRegisterClicked,
-              child: const Text('Don\'t have an account? Register'),
             ),
-          ],
+          ),
         ),
       ),
     );

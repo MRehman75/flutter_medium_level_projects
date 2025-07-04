@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class GroupDashboardPage extends StatelessWidget {
   final String groupId;
@@ -132,7 +133,26 @@ class GroupDashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Group Dashboard')),
+      appBar: AppBar(
+        title: Text(
+          'Group Dashboard',
+          style: GoogleFonts.montserrat(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6D0EB5), Color(0xFF4059F1)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: FutureBuilder<DocumentSnapshot>(
         future:
             FirebaseFirestore.instance.collection('groups').doc(groupId).get(),
@@ -142,50 +162,89 @@ class GroupDashboardPage extends StatelessWidget {
           final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
           final members = List<String>.from(data['members'] ?? []);
           return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: FutureBuilder<Map<String, dynamic>>(
-              future: calculateDashboard(members),
-              builder: (context, dashSnap) {
-                if (!dashSnap.hasData) return const CircularProgressIndicator();
-                final totalExpenses = dashSnap.data!['totalExpenses'] as double;
-                final share = dashSnap.data!['share'] as Map<String, double>;
-                return SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Total Expenses: Rs. ${totalExpenses.toStringAsFixed(2)}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+            padding: const EdgeInsets.all(24.0),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 3,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: FutureBuilder<Map<String, dynamic>>(
+                        future: calculateDashboard(members),
+                        builder: (context, dashSnap) {
+                          if (!dashSnap.hasData)
+                            return const CircularProgressIndicator();
+                          final totalExpenses =
+                              dashSnap.data!['totalExpenses'] as double;
+                          final share =
+                              dashSnap.data!['share'] as Map<String, double>;
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Total Expenses',
+                                style: GoogleFonts.montserrat(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Rs. ${totalExpenses.toStringAsFixed(2)}',
+                                style: GoogleFonts.openSans(fontSize: 18),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Individual Share',
+                                style: GoogleFonts.montserrat(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              ...share.entries.map(
+                                (e) => FutureBuilder<DocumentSnapshot>(
+                                  future:
+                                      FirebaseFirestore.instance
+                                          .collection('users')
+                                          .doc(e.key)
+                                          .get(),
+                                  builder: (context, userSnap) {
+                                    if (!userSnap.hasData)
+                                      return const Text('Loading...');
+                                    final userData =
+                                        userSnap.data!.data()
+                                            as Map<String, dynamic>?;
+                                    final name =
+                                        userData?['username'] ??
+                                        userData?['email'] ??
+                                        e.key;
+                                    return Text(
+                                      '$name: Rs. ${e.value.toStringAsFixed(2)}',
+                                      style: GoogleFonts.openSans(),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Individual Share:',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      ...share.entries.map(
-                        (e) => FutureBuilder<DocumentSnapshot>(
-                          future:
-                              FirebaseFirestore.instance
-                                  .collection('users')
-                                  .doc(e.key)
-                                  .get(),
-                          builder: (context, userSnap) {
-                            if (!userSnap.hasData)
-                              return const Text('Loading...');
-                            final userData =
-                                userSnap.data!.data() as Map<String, dynamic>?;
-                            final name =
-                                userData?['username'] ??
-                                userData?['email'] ??
-                                e.key;
-                            return Text(
-                              '$name: Rs. ${e.value.toStringAsFixed(2)}',
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      FutureBuilder<Map<String, double>>(
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 3,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: FutureBuilder<Map<String, double>>(
                         future: calculateBalances(members),
                         builder: (context, snap) {
                           if (!snap.hasData)
@@ -194,9 +253,12 @@ class GroupDashboardPage extends StatelessWidget {
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Individual Balance:',
-                                style: TextStyle(fontWeight: FontWeight.bold),
+                              Text(
+                                'Individual Balance',
+                                style: GoogleFonts.montserrat(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
                               ),
                               ...balances.entries.map(
                                 (e) => FutureBuilder<DocumentSnapshot>(
@@ -217,24 +279,54 @@ class GroupDashboardPage extends StatelessWidget {
                                         e.key;
                                     return Text(
                                       '$name: Rs. ${e.value.toStringAsFixed(2)}',
+                                      style: GoogleFonts.openSans(),
                                     );
                                   },
                                 ),
                               ),
-                              const SizedBox(height: 16),
-                              const Text(
-                                'Individual Borrows:',
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              ...whoOwesWhom(balances, members),
                             ],
                           );
                         },
                       ),
-                    ],
+                    ),
                   ),
-                );
-              },
+                  const SizedBox(height: 24),
+                  Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 3,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Who Owes Whom',
+                            style: GoogleFonts.montserrat(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          FutureBuilder<Map<String, double>>(
+                            future: calculateBalances(members),
+                            builder: (context, snap) {
+                              if (!snap.hasData)
+                                return const CircularProgressIndicator();
+                              final balances = snap.data!;
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: whoOwesWhom(balances, members),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
