@@ -15,7 +15,6 @@ class HomePage extends StatelessWidget {
     final userDoc = FirebaseFirestore.instance
         .collection('users')
         .doc(user.uid);
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -35,14 +34,56 @@ class HomePage extends StatelessWidget {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-              Navigator.of(
-                context,
-              ).pushNamedAndRemoveUntil('/login', (route) => false);
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.menu, color: Colors.white),
+            onSelected: (value) async {
+              if (value == 'profile') {
+                Navigator.of(context).pushNamed('/profile');
+              } else if (value == 'groups') {
+                Navigator.of(context).pushNamed('/home');
+              } else if (value == 'logout') {
+                await FirebaseAuth.instance.signOut();
+                Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil('/login', (route) => false);
+              }
             },
+            itemBuilder:
+                (context) => [
+                  PopupMenuItem(
+                    value: 'profile',
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.account_circle,
+                          color: Color(0xFF4059F1),
+                        ),
+                        const SizedBox(width: 8),
+                        Text('Profile', style: GoogleFonts.openSans()),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'groups',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.group, color: Color(0xFF6D0EB5)),
+                        const SizedBox(width: 8),
+                        Text('Groups', style: GoogleFonts.openSans()),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'logout',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.logout, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Text('Logout', style: GoogleFonts.openSans()),
+                      ],
+                    ),
+                  ),
+                ],
           ),
         ],
         elevation: 0,
@@ -206,9 +247,27 @@ class HomePage extends StatelessWidget {
                                         'Tap to view details',
                                         style: GoogleFonts.openSans(),
                                       ),
-                                      trailing: Icon(
-                                        Icons.arrow_forward_ios,
-                                        color: Colors.grey[400],
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.dashboard,
+                                              color: Color(0xFF4059F1),
+                                            ),
+                                            tooltip: 'Dashboard',
+                                            onPressed: () {
+                                              Navigator.of(context).pushNamed(
+                                                '/group_dashboard',
+                                                arguments: groupId,
+                                              );
+                                            },
+                                          ),
+                                          Icon(
+                                            Icons.arrow_forward_ios,
+                                            color: Colors.grey[400],
+                                          ),
+                                        ],
                                       ),
                                       onTap:
                                           () => Navigator.of(context).pushNamed(

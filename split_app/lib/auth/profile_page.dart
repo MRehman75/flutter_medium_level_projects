@@ -256,12 +256,56 @@ class _ProfilePageState extends State<ProfilePage> {
                                   style: GoogleFonts.openSans(),
                                 ),
                               ]
-                              : groups
-                                  .map(
-                                    (g) =>
-                                        Text(g, style: GoogleFonts.openSans()),
-                                  )
-                                  .toList(),
+                              : [
+                                FutureBuilder<QuerySnapshot>(
+                                  future:
+                                      FirebaseFirestore.instance
+                                          .collection('groups')
+                                          .where(
+                                            FieldPath.documentId,
+                                            whereIn: groups,
+                                          )
+                                          .get(),
+                                  builder: (context, groupSnap) {
+                                    if (!groupSnap.hasData) {
+                                      return const CircularProgressIndicator();
+                                    }
+                                    final groupDocs = groupSnap.data!.docs;
+                                    if (groupDocs.isEmpty) {
+                                      return Text(
+                                        'No groups found.',
+                                        style: GoogleFonts.openSans(),
+                                      );
+                                    }
+                                    return Column(
+                                      children:
+                                          groupDocs.map((doc) {
+                                            final groupData =
+                                                doc.data()
+                                                    as Map<String, dynamic>;
+                                            final groupName =
+                                                groupData['name'] ?? doc.id;
+                                            return ListTile(
+                                              leading: const Icon(
+                                                Icons.group,
+                                                color: Color(0xFF6D0EB5),
+                                              ),
+                                              title: Text(
+                                                groupName,
+                                                style: GoogleFonts.openSans(),
+                                              ),
+                                              onTap: () {
+                                                Navigator.of(context).pushNamed(
+                                                  '/group',
+                                                  arguments: doc.id,
+                                                );
+                                              },
+                                            );
+                                          }).toList(),
+                                    );
+                                  },
+                                ),
+                              ],
                         ],
                       ),
                     ),
