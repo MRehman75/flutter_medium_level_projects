@@ -48,6 +48,7 @@ class _RegisterPageState extends State<RegisterPage> {
         'username': username,
         'email': _emailController.text.trim(),
         'groups': [],
+        'cash': 0.0,
       });
       await userCredential.user!.sendEmailVerification();
       await _auth.signOut();

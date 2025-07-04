@@ -8,6 +8,13 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return const Center(child: Text('No user logged in.'));
+    }
+    final userDoc = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
@@ -20,66 +27,78 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Logged in as: \\${user?.email ?? "Unknown"}'),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pushNamed('/profile'),
-              child: const Text('View Profile'),
+      body: FutureBuilder<DocumentSnapshot>(
+        future: userDoc.get(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData)
+            return const Center(child: CircularProgressIndicator());
+          final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
+          final groupIds = List<String>.from(data['groups'] ?? []);
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Text('Logged in as: ${user.email ?? "Unknown"}'),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pushNamed('/profile'),
+                  child: const Text('View Profile'),
+                ),
+                ElevatedButton(
+                  onPressed:
+                      () => Navigator.of(context).pushNamed('/create_group'),
+                  child: const Text('Create Group'),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Your Groups:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Expanded(
+                  child:
+                      groupIds.isEmpty
+                          ? const Text('No groups yet.')
+                          : FutureBuilder<QuerySnapshot>(
+                            future:
+                                FirebaseFirestore.instance
+                                    .collection('groups')
+                                    .where(
+                                      FieldPath.documentId,
+                                      whereIn: groupIds,
+                                    )
+                                    .get(),
+                            builder: (context, groupSnap) {
+                              if (!groupSnap.hasData)
+                                return const CircularProgressIndicator();
+                              final groupDocs = groupSnap.data!.docs;
+                              if (groupDocs.isEmpty)
+                                return const Text('No groups found.');
+                              return ListView.builder(
+                                itemCount: groupDocs.length,
+                                itemBuilder: (context, index) {
+                                  final groupData =
+                                      groupDocs[index].data()
+                                          as Map<String, dynamic>;
+                                  final groupId = groupDocs[index].id;
+                                  final groupName =
+                                      groupData['name'] ?? 'Unnamed Group';
+                                  return ListTile(
+                                    title: Text(groupName),
+                                    onTap:
+                                        () => Navigator.of(context).pushNamed(
+                                          '/group',
+                                          arguments: groupId,
+                                        ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                ),
+              ],
             ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pushNamed('/create_group'),
-              child: const Text('Create Group'),
-            ),
-            Expanded(
-              child: FutureBuilder<QuerySnapshot>(
-                future: FirebaseFirestore.instance.collection('groups').get(),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData)
-                    return const CircularProgressIndicator();
-                  final groups =
-                      snapshot.data!.docs.map((doc) => doc.id).toList();
-                  return groups.isEmpty
-                      ? const Text('No groups yet.')
-                      : ListView.builder(
-                        itemCount: groups.length,
-                        itemBuilder: (context, index) {
-                          final groupId = groups[index];
-                          return ListTile(
-                            title: FutureBuilder<DocumentSnapshot>(
-                              future:
-                                  FirebaseFirestore.instance
-                                      .collection('groups')
-                                      .doc(groupId)
-                                      .get(),
-                              builder: (context, groupSnap) {
-                                if (!groupSnap.hasData)
-                                  return const Text('Loading...');
-                                final groupData =
-                                    groupSnap.data!.data()
-                                        as Map<String, dynamic>?;
-                                if (groupData == null)
-                                  return const Text('Group not found');
-                                return Text(
-                                  groupData['name'] ?? 'Unnamed Group',
-                                );
-                              },
-                            ),
-                            onTap:
-                                () => Navigator.of(
-                                  context,
-                                ).pushNamed('/group', arguments: groupId),
-                          );
-                        },
-                      );
-                },
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
