@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "8847739471",
+    "project_id": "split-smart-d7655",
+    "storage_bucket": "split-smart-d7655.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:8847739471:android:e52e495a9989f720e5383a",
+        "android_client_info": {
+          "package_name": "com.example.split_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAp8sDk-jfzS828sbLTdFHctlDxEO9M18Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
