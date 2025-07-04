@@ -73,6 +73,29 @@ class _GroupPageState extends State<GroupPage> {
       await FirebaseFirestore.instance.collection('users').doc(userId).update({
         'groups': FieldValue.arrayUnion([widget.groupId]),
       });
+      // Notify all other group members
+      final groupDoc =
+          await FirebaseFirestore.instance
+              .collection('groups')
+              .doc(widget.groupId)
+              .get();
+      final members = List<String>.from(groupDoc['members'] ?? []);
+      for (final memberId in members) {
+        if (memberId != userId) {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(memberId)
+              .collection('notifications')
+              .add({
+                'type': 'join',
+                'groupId': widget.groupId,
+                'message':
+                    'User ${userDoc['username'] ?? userDoc['email'] ?? userId} joined the group.',
+                'timestamp': FieldValue.serverTimestamp(),
+                'read': false,
+              });
+        }
+      }
       setState(() {
         loading = false;
         _inviteController.clear();
@@ -102,17 +125,17 @@ class _GroupPageState extends State<GroupPage> {
       return;
     }
     // Check payer's cash balance
-    final payerDoc =
-        await FirebaseFirestore.instance.collection('users').doc(paidBy).get();
-    final payerData = payerDoc.data() as Map<String, dynamic>?;
-    final payerCash = (payerData?['cash'] ?? 0.0) as num;
-    if (payerCash < amount) {
-      setState(() {
-        expenseError = 'Payer does not have enough cash.';
-        expenseLoading = false;
-      });
-      return;
-    }
+    // (Removed insufficient funds check to allow negative balance)
+    // final payerDoc = await FirebaseFirestore.instance.collection('users').doc(paidBy).get();
+    // final payerData = payerDoc.data() as Map<String, dynamic>?;
+    // final payerCash = (payerData?['cash'] ?? 0.0) as num;
+    // if (payerCash < amount) {
+    //   setState(() {
+    //     expenseError = 'Payer does not have enough cash.';
+    //     expenseLoading = false;
+    //   });
+    //   return;
+    // }
     final splitAmount = (amount / members.length).toStringAsFixed(2);
     final split = {for (var m in members) m: double.parse(splitAmount)};
     try {
@@ -133,6 +156,22 @@ class _GroupPageState extends State<GroupPage> {
             'notes': notes,
             'split': split,
           });
+      // Notify all other group members
+      for (final memberId in members) {
+        if (memberId != paidBy) {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(memberId)
+              .collection('notifications')
+              .add({
+                'type': 'expense',
+                'groupId': widget.groupId,
+                'message': "A new expense '$title' was added.",
+                'timestamp': FieldValue.serverTimestamp(),
+                'read': false,
+              });
+        }
+      }
       setState(() {
         _expenseTitleController.clear();
         _expenseAmountController.clear();
@@ -519,11 +558,41 @@ class _GroupPageState extends State<GroupPage> {
                               subtitle: Text(
                                 'Amount: ${data['amount']} | Paid by: ${data['paidBy']} | Date: ${DateFormat('yyyy-MM-dd').format((data['date'] as Timestamp).toDate())}',
                               ),
-                              trailing:
-                                  data['notes'] != null &&
-                                          data['notes'].toString().isNotEmpty
-                                      ? Icon(Icons.note)
-                                      : null,
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (isAdmin)
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: Colors.red,
+                                      ),
+                                      tooltip: 'Delete Expense',
+                                      onPressed: () async {
+                                        // Reverse cash deduction for payer
+                                        await FirebaseFirestore.instance
+                                            .collection('users')
+                                            .doc(data['paidBy'])
+                                            .update({
+                                              'cash': FieldValue.increment(
+                                                (data['amount'] as num)
+                                                    .toDouble(),
+                                              ),
+                                            });
+                                        // Delete expense
+                                        await FirebaseFirestore.instance
+                                            .collection('groups')
+                                            .doc(widget.groupId)
+                                            .collection('expenses')
+                                            .doc(doc.id)
+                                            .delete();
+                                      },
+                                    ),
+                                  if (data['notes'] != null &&
+                                      data['notes'].toString().isNotEmpty)
+                                    const Icon(Icons.note),
+                                ],
+                              ),
                             );
                           }).toList(),
                     );
