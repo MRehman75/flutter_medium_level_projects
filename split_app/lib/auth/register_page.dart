@@ -12,7 +12,8 @@ class RegisterPage extends StatefulWidget {
   State<RegisterPage> createState() => _RegisterPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _RegisterPageState extends State<RegisterPage>
+    with SingleTickerProviderStateMixin {
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
   final _emailController = TextEditingController();
@@ -21,6 +22,33 @@ class _RegisterPageState extends State<RegisterPage> {
   String error = '';
   bool loading = false;
   bool showVerifyMessage = false;
+  late AnimationController _controller;
+  late Animation<double> _opacity;
+  late Animation<Offset> _offset;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+    _opacity = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _offset = Tween<Offset>(
+      begin: const Offset(0, 0.15),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   Future<void> register() async {
     setState(() {
@@ -167,96 +195,104 @@ class _RegisterPageState extends State<RegisterPage> {
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Center(
-          child: Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            elevation: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Create Account',
-                    style: GoogleFonts.montserrat(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 22,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _usernameController,
-                    decoration: InputDecoration(
-                      labelText: 'Username',
-                      labelStyle: GoogleFonts.openSans(),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+          child: SlideTransition(
+            position: _offset,
+            child: FadeTransition(
+              opacity: _opacity,
+              child: Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                elevation: 4,
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Create Account',
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 22,
+                        ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _emailController,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      labelStyle: GoogleFonts.openSans(),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _passwordController,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      labelStyle: GoogleFonts.openSans(),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    obscureText: true,
-                  ),
-                  if (error.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        error,
-                        style: GoogleFonts.openSans(color: Colors.red),
-                      ),
-                    ),
-                  const SizedBox(height: 16),
-                  loading
-                      ? const CircularProgressIndicator()
-                      : ElevatedButton(
-                        onPressed: register,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4059F1),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 14,
-                            horizontal: 32,
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _usernameController,
+                        decoration: InputDecoration(
+                          labelText: 'Username',
+                          labelStyle: GoogleFonts.openSans(),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          labelStyle: GoogleFonts.openSans(),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _passwordController,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          labelStyle: GoogleFonts.openSans(),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        obscureText: true,
+                      ),
+                      if (error.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            error,
+                            style: GoogleFonts.openSans(color: Colors.red),
+                          ),
+                        ),
+                      const SizedBox(height: 16),
+                      loading
+                          ? const CircularProgressIndicator()
+                          : ElevatedButton(
+                            onPressed: register,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF4059F1),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 14,
+                                horizontal: 32,
+                              ),
+                            ),
+                            child: Text(
+                              'Register',
+                              style: GoogleFonts.montserrat(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                      TextButton(
+                        onPressed:
+                            () => Navigator.of(
+                              context,
+                            ).pushReplacementNamed('/login'),
                         child: Text(
-                          'Register',
-                          style: GoogleFonts.montserrat(color: Colors.white),
+                          'Already have an account? Login',
+                          style: GoogleFonts.openSans(),
                         ),
                       ),
-                  TextButton(
-                    onPressed:
-                        () => Navigator.of(
-                          context,
-                        ).pushReplacementNamed('/login'),
-                    child: Text(
-                      'Already have an account? Login',
-                      style: GoogleFonts.openSans(),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),

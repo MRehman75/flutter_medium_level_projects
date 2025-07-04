@@ -518,6 +518,35 @@ class _GroupPageState extends State<GroupPage> {
           );
         },
       ),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            backgroundColor: const Color(0xFF4059F1),
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).pushNamed('/add_expense', arguments: widget.groupId);
+            },
+            child: const Icon(Icons.add, color: Colors.white),
+            tooltip: 'Add Expense',
+          ),
+          const SizedBox(height: 16),
+          FloatingActionButton(
+            heroTag: 'dashboard',
+            mini: true,
+            backgroundColor: const Color(0xFF6D0EB5),
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).pushNamed('/group_dashboard', arguments: widget.groupId);
+            },
+            child: const Icon(Icons.dashboard, color: Colors.white),
+            tooltip: 'Group Dashboard',
+          ),
+        ],
+      ),
     );
   }
 
