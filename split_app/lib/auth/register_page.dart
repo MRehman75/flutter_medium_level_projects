@@ -3,9 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegisterPage extends StatefulWidget {
+  static const routeName = '/register';
   final VoidCallback onLoginClicked;
-  const RegisterPage({Key? key, required this.onLoginClicked})
-    : super(key: key);
+  const RegisterPage({super.key, required this.onLoginClicked});
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
@@ -19,6 +19,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _usernameController = TextEditingController();
   String error = '';
   bool loading = false;
+  bool showVerifyMessage = false;
 
   Future<void> register() async {
     setState(() {
@@ -47,6 +48,18 @@ class _RegisterPageState extends State<RegisterPage> {
         'username': username,
         'email': _emailController.text.trim(),
       });
+      await userCredential.user!.sendEmailVerification();
+      await _auth.signOut();
+      setState(() {
+        showVerifyMessage = true;
+        loading = false;
+      });
+      // Use Navigator to go to login page after showing the verification message
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed('/login');
+        }
+      });
     } on FirebaseAuthException catch (e) {
       setState(() {
         error = e.message ?? 'Registration failed';
@@ -54,13 +67,33 @@ class _RegisterPageState extends State<RegisterPage> {
       });
       return;
     }
-    setState(() {
-      loading = false;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
+    if (showVerifyMessage) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Verify Email')),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'A verification email has been sent.\nPlease check your inbox and verify your email before logging in.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed:
+                    () => Navigator.of(context).pushReplacementNamed('/login'),
+                child: const Text('Back to Login'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     return Scaffold(
       appBar: AppBar(title: const Text('Register')),
       body: Padding(
@@ -94,7 +127,8 @@ class _RegisterPageState extends State<RegisterPage> {
                   child: const Text('Register'),
                 ),
             TextButton(
-              onPressed: widget.onLoginClicked,
+              onPressed:
+                  () => Navigator.of(context).pushReplacementNamed('/login'),
               child: const Text('Already have an account? Login'),
             ),
           ],
