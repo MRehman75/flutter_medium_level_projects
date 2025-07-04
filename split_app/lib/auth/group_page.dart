@@ -526,6 +526,19 @@ class _GroupPageState extends State<GroupPage> {
               ),
               IconButton(
                 icon: const Icon(
+                  Icons.chat_bubble,
+                  color: Color(0xFF4059F1),
+                  size: 32,
+                ),
+                tooltip: 'Group Chat',
+                onPressed: () {
+                  Navigator.of(
+                    context,
+                  ).pushNamed('/group_chat', arguments: widget.groupId);
+                },
+              ),
+              IconButton(
+                icon: const Icon(
                   Icons.person_add,
                   color: Color(0xFF4059F1),
                   size: 32,

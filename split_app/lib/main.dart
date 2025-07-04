@@ -11,6 +11,7 @@ import 'auth/group_page.dart';
 import 'auth/invite_user_page.dart';
 import 'auth/group_dashboard_page.dart';
 import 'auth/add_expense_page.dart';
+import 'auth/group_chat_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -139,6 +140,12 @@ class MyApp extends StatelessWidget {
           final groupId = settings.arguments as String;
           return MaterialPageRoute(
             builder: (context) => AddExpensePage(groupId: groupId),
+          );
+        }
+        if (settings.name == '/group_chat') {
+          final groupId = settings.arguments as String;
+          return MaterialPageRoute(
+            builder: (context) => GroupChatPage(groupId: groupId),
           );
         }
         return null;
